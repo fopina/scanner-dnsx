@@ -6,6 +6,9 @@ on:
     - dev
     - dev-*
 
+permissions:
+  packages: write
+
 jobs:
   publish-dev:
     runs-on: ubuntu-latest
