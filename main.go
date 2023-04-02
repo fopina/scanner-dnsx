@@ -4,10 +4,9 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 
-	"github.com/fopina/scanner-go-entrypoint/scanner"
+	"github.com/surface-security/scanner-go-entrypoint/scanner"
 )
 
 func main() {
@@ -21,6 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
+
 	// pass temporary file to dnsx instead of final path, as only finished files should be placed there
 	file, err := os.CreateTemp("", "dnsx")
 	if err != nil {
@@ -28,21 +28,13 @@ func main() {
 	}
 	defer os.Remove(file.Name())
 
-	flags := append(
-		[]string{
-			"-json",
-			"-o", file.Name(),
-			"-duc",
-			"-l",
-			options.Input,
-		},
-		options.ExtraFlags...,
+	err = s.Exec(
+		"-json",
+		"-o", file.Name(),
+		"-duc",
+		"-l",
+		options.Input,
 	)
-	cmd := exec.Command(options.BinPath, flags...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-
 	if err != nil {
 		log.Fatalf("Failed to run scanner: %v", err)
 	}
