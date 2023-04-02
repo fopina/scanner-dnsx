@@ -6,14 +6,21 @@ import (
 	"os"
 	"path"
 
+	flag "github.com/spf13/pflag"
 	"github.com/surface-security/scanner-go-entrypoint/scanner"
 )
+
+type localOptions struct {
+	all bool // resolve for all record types
+}
 
 func main() {
 	s := scanner.Scanner{
 		Name: "dnsx",
 	}
+	moreOptions := &localOptions{}
 	options := s.BuildOptions()
+	flag.BoolVar(&moreOptions.all, "all", false, "Resolve for all DNS record types (same as using all the extra flags `-a -aaaa -cname ...` together)")
 	scanner.ParseOptions(options)
 
 	err := os.MkdirAll(options.Output, 0755)
@@ -28,13 +35,30 @@ func main() {
 	}
 	defer os.Remove(file.Name())
 
-	err = s.Exec(
+	flags := []string{
 		"-json",
 		"-o", file.Name(),
 		"-duc",
 		"-l",
 		options.Input,
-	)
+	}
+	if moreOptions.all {
+		flags = append(
+			flags,
+			"-a",
+			"-aaaa",
+			"-cname",
+			"-ns",
+			"-txt",
+			"-srv",
+			"-ptr",
+			"-mx",
+			"-soa",
+			"-axfr",
+			"-caa",
+		)
+	}
+	err = s.Exec(flags...)
 	if err != nil {
 		log.Fatalf("Failed to run scanner: %v", err)
 	}
